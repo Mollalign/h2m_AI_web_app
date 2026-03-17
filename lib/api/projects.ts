@@ -1,15 +1,15 @@
 import apiClient from "./client";
-import type { Project, PaginatedResponse } from "@/lib/types";
+import type { Project } from "@/lib/types";
 
 export const projectsApi = {
   list: async (params?: {
-    page?: number;
-    size?: number;
+    skip?: number;
+    limit?: number;
     search?: string;
     is_archived?: boolean;
-  }): Promise<PaginatedResponse<Project>> => {
+  }): Promise<Project[]> => {
     const { data } = await apiClient.get("/projects", { params });
-    return data;
+    return Array.isArray(data) ? data : data.items ?? data.projects ?? [];
   },
 
   get: async (id: string): Promise<Project> => {

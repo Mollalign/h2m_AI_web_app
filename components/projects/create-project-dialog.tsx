@@ -75,7 +75,9 @@ export function CreateProjectDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FolderPlus className="size-5 text-primary" />
+            <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10">
+              <FolderPlus className="size-4 text-primary" />
+            </div>
             Create Project
           </DialogTitle>
           <DialogDescription>
@@ -83,23 +85,26 @@ export function CreateProjectDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label htmlFor="name">Project name</Label>
+            <Label htmlFor="name" className="label-caps">
+              Project name
+            </Label>
             <Input
               id="name"
               placeholder="e.g., Data Structures & Algorithms"
+              className="h-10"
               {...register("name")}
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+              <p className="text-xs text-destructive">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">
+            <Label htmlFor="description" className="label-caps">
               Description{" "}
-              <span className="text-muted-foreground">(optional)</span>
+              <span className="text-muted-foreground/60 normal-case">(optional)</span>
             </Label>
             <Textarea
               id="description"
@@ -108,21 +113,20 @@ export function CreateProjectDialog({
               {...register("description")}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">
-                {errors.description.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.description.message}</p>
             )}
           </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="h-9 text-sm"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="h-9 text-sm">
               {isLoading ? (
                 <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (

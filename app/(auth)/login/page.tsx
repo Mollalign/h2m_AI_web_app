@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Eye, EyeOff, LogIn, Brain } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,42 +44,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 lg:hidden mb-8">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Brain className="size-5" />
+    <div className="space-y-7">
+      <div className="lg:hidden space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+            <Brain className="size-5" />
+          </div>
+          <div>
+            <span className="text-lg font-bold tracking-[-0.02em]">H2M AI</span>
+            <p className="text-[11px] text-muted-foreground leading-tight">AI-powered learning</p>
+          </div>
         </div>
-        <span className="text-xl font-bold tracking-tight">H2M AI</span>
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
-        <p className="text-muted-foreground">
-          Sign in to your account to continue learning
+        <h2 className="text-[1.625rem] sm:text-[1.75rem] font-extrabold tracking-[-0.03em]">Welcome back</h2>
+        <p className="text-[13px] sm:text-[13.5px] text-muted-foreground leading-[1.6]">
+          Sign in to continue your learning journey
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="label-caps">
+            Email
+          </Label>
           <Input
             id="email"
             type="email"
             placeholder="you@example.com"
             autoComplete="email"
+            className="h-11"
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-sm text-destructive">{errors.email.message}</p>
+            <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="label-caps">
+              Password
+            </Label>
             <Link
               href="/forgot-password"
-              className="text-sm text-primary hover:underline"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               Forgot password?
             </Link>
@@ -90,41 +100,47 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               autoComplete="current-password"
+              className="h-11 pr-10"
               {...register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+              tabIndex={-1}
             >
-              {showPassword ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-sm text-destructive">
-              {errors.password.message}
-            </p>
+            <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
           )}
         </div>
 
-        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+        <Button type="submit" className="w-full h-11 text-[13px] font-semibold tracking-wide" disabled={isLoading}>
           {isLoading ? (
             <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
           ) : (
-            <LogIn className="size-4" />
+            <>
+              Sign in
+              <ArrowRight className="size-4 ml-1" />
+            </>
           )}
-          {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-background px-3 text-muted-foreground">New here?</span>
+        </div>
+      </div>
+
       <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-medium text-primary hover:underline">
-          Create account
+        <Link href="/register" className="font-medium text-foreground hover:text-primary transition-colors">
+          Create an account
         </Link>
       </p>
     </div>

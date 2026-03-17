@@ -234,20 +234,46 @@ export interface NotificationPreference {
 export interface ProgressStats {
   total_projects: number;
   total_conversations: number;
-  total_quizzes_taken: number;
-  average_quiz_score: number;
-  total_messages: number;
+  total_quiz_attempts: number;
+  avg_quiz_score: number;
   study_streak: number;
-  topics_mastered: number;
-  total_topics: number;
+  quizzes_this_week: number;
+  knowledge: {
+    topics_mastered: number;
+    total_topics: number;
+    total_knowledge_states: number;
+    average_mastery: number;
+  };
+  mastery_by_project: Array<{
+    project_id: string;
+    project_name: string;
+    mastery: number;
+    topics_count: number;
+  }>;
+}
+
+export interface StudyPlanDay {
+  day?: number;
+  date?: string;
+  topics?: string[];
+  focus?: string;
+  activities?: string[];
+  hours?: number;
+  [key: string]: unknown;
 }
 
 export interface StudyPlan {
   project_id: string;
   project_name: string;
-  plan: string;
-  topics: string[];
-  estimated_hours: number;
+  exam_date: string;
+  days_until_exam: number;
+  daily_hours: number;
+  plan: StudyPlanDay[] | { days: StudyPlanDay[]; summary?: string } | string;
+  topic_mastery: Array<{
+    name: string;
+    description: string;
+    mastery: number;
+  }>;
 }
 
 export interface ExamReadiness {

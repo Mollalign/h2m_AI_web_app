@@ -59,10 +59,16 @@ export const conversationsApi = {
     onSource: (sources: unknown[]) => void,
     onContent: (chunk: string) => void,
     onDone: (message: Record<string, unknown>) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    imageBase64?: string
   ): AbortController => {
     const controller = new AbortController();
     const token = localStorage.getItem("access_token");
+
+    const body: Record<string, unknown> = { message: content };
+    if (imageBase64) {
+      body.image_base64 = imageBase64;
+    }
 
     fetch(`${API_BASE_URL}/conversations/${conversationId}/messages/stream`, {
       method: "POST",
@@ -70,7 +76,7 @@ export const conversationsApi = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ message: content }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
       .then(async (response) => {

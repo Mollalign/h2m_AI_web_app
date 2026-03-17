@@ -20,8 +20,8 @@ export default function DashboardPage() {
   });
 
   const { data: projects, isLoading: projectsLoading } = useQuery({
-    queryKey: ["projects", { page: 1, size: 6 }],
-    queryFn: () => projectsApi.list({ page: 1, size: 6 }),
+    queryKey: ["projects", { limit: 6 }],
+    queryFn: () => projectsApi.list({ limit: 6 }),
   });
 
   const { data: conversations, isLoading: convsLoading } = useQuery({
@@ -30,22 +30,13 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <WelcomeCard user={user} />
-
       <DashboardStats stats={stats} isLoading={statsLoading} />
-
       <QuickActions />
-
       <div className="grid gap-6 lg:grid-cols-2">
-        <RecentProjects
-          projects={projects?.items}
-          isLoading={projectsLoading}
-        />
-        <RecentConversations
-          conversations={conversations}
-          isLoading={convsLoading}
-        />
+        <RecentProjects projects={projects} isLoading={projectsLoading} />
+        <RecentConversations conversations={conversations} isLoading={convsLoading} />
       </div>
     </div>
   );

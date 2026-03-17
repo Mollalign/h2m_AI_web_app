@@ -17,8 +17,8 @@ import {
   Eye,
   EyeOff,
   Save,
+  Sparkles,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,9 +35,7 @@ const profileSchema = z.object({
 const passwordSchema = z
   .object({
     current_password: z.string().min(1, "Current password is required"),
-    new_password: z
-      .string()
-      .min(8, "Password must be at least 8 characters"),
+    new_password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string(),
   })
   .refine((d) => d.new_password === d.confirm_password, {
@@ -97,104 +95,65 @@ export default function SettingsPage() {
   const notifMutation = useMutation({
     mutationFn: authApi.updateNotificationPreferences,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notification-preferences"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       toast.success("Preferences updated");
     },
   });
 
   const socraticMutation = useMutation({
-    mutationFn: (enabled: boolean) =>
-      authApi.updateProfile({ default_socratic_mode: enabled }),
-    onSuccess: (updatedUser) => {
-      updateUser(updatedUser);
-    },
+    mutationFn: (enabled: boolean) => authApi.updateProfile({ default_socratic_mode: enabled }),
+    onSuccess: (updatedUser) => updateUser(updatedUser),
   });
 
-  const initials =
-    user?.full_name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "U";
+  const initials = user?.full_name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U";
 
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account and preferences
-        </p>
+        <h1 className="text-2xl font-extrabold tracking-[-0.03em]">Settings</h1>
+        <p className="text-[13.5px] text-muted-foreground leading-[1.6] mt-1">Manage your account and preferences</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <User className="size-5 text-primary" />
-            Profile
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={profileForm.handleSubmit((d) =>
-              profileMutation.mutate(d)
-            )}
-            className="space-y-4"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <Avatar className="size-16">
-                <AvatarFallback
-                  className="text-lg"
-                  style={{
-                    backgroundColor: user?.avatar_color || undefined,
-                  }}
-                >
+      <section className="rounded-2xl border bg-card">
+        <div className="flex items-center gap-3 p-5 pb-4">
+          <User className="size-4 text-primary" />
+          <h2 className="text-[13px] font-semibold">Profile</h2>
+        </div>
+        <Separator />
+        <div className="p-5">
+          <form onSubmit={profileForm.handleSubmit((d) => profileMutation.mutate(d))} className="space-y-5">
+            <div className="flex items-center gap-4">
+              <Avatar className="size-14 rounded-2xl">
+                <AvatarFallback className="rounded-2xl text-base bg-primary/10 text-primary" style={{ backgroundColor: user?.avatar_color || undefined, color: user?.avatar_color ? "white" : undefined }}>
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{user?.full_name}</p>
-                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <p className="font-medium text-sm">{user?.full_name}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full name</Label>
-              <Input id="full_name" {...profileForm.register("full_name")} />
-              {profileForm.formState.errors.full_name && (
-                <p className="text-sm text-destructive">
-                  {profileForm.formState.errors.full_name.message}
-                </p>
-              )}
+              <Label htmlFor="full_name" className="label-caps">Full name</Label>
+              <Input id="full_name" className="h-10" {...profileForm.register("full_name")} />
+              {profileForm.formState.errors.full_name && <p className="text-xs text-destructive">{profileForm.formState.errors.full_name.message}</p>}
             </div>
-
-            <Button
-              type="submit"
-              size="sm"
-              disabled={profileMutation.isPending}
-            >
-              <Save className="size-4" />
-              Save
+            <Button type="submit" size="sm" disabled={profileMutation.isPending} className="h-8 text-xs font-semibold">
+              <Save className="size-3.5" />
+              Save changes
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            {theme === "dark" ? (
-              <Moon className="size-5 text-primary" />
-            ) : (
-              <Sun className="size-5 text-primary" />
-            )}
-            Appearance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-3">
+      <section className="rounded-2xl border bg-card">
+        <div className="flex items-center gap-3 p-5 pb-4">
+          {theme === "dark" ? <Moon className="size-4 text-primary" /> : <Sun className="size-4 text-primary" />}
+          <h2 className="text-[13px] font-semibold">Appearance</h2>
+        </div>
+        <Separator />
+        <div className="p-5 space-y-5">
+          <div className="grid grid-cols-3 gap-2">
             {[
               { value: "light", icon: Sun, label: "Light" },
               { value: "dark", icon: Moon, label: "Dark" },
@@ -203,168 +162,94 @@ export default function SettingsPage() {
               <button
                 key={value}
                 onClick={() => setTheme(value)}
-                className={`flex flex-1 flex-col items-center gap-2 rounded-lg border p-3 transition-all ${
-                  theme === value
-                    ? "border-primary bg-primary/5"
-                    : "hover:border-primary/30"
+                className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all duration-200 ${
+                  theme === value ? "border-primary bg-primary/5 shadow-sm" : "hover:border-border/80 hover:bg-muted/50"
                 }`}
               >
-                <Icon className="size-5" />
+                <Icon className={`size-4 ${theme === value ? "text-primary" : "text-muted-foreground"}`} />
                 <span className="text-xs font-medium">{label}</span>
               </button>
             ))}
           </div>
-
-          <Separator className="my-4" />
-
+          <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <Label>Default Socratic Mode</Label>
-              <p className="text-xs text-muted-foreground">
-                New conversations will use Socratic method by default
-              </p>
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-3.5 text-primary" />
+                <Label className="text-sm font-medium">Socratic Mode</Label>
+              </div>
+              <p className="text-xs text-muted-foreground leading-[1.6] mt-0.5 ml-5.5">New conversations default to Socratic method</p>
             </div>
-            <Switch
-              checked={user?.default_socratic_mode ?? false}
-              onCheckedChange={(checked) => socraticMutation.mutate(checked)}
-            />
+            <Switch checked={user?.default_socratic_mode ?? false} onCheckedChange={(checked) => socraticMutation.mutate(checked)} />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Bell className="size-5 text-primary" />
-            Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <section className="rounded-2xl border bg-card">
+        <div className="flex items-center gap-3 p-5 pb-4">
+          <Bell className="size-4 text-primary" />
+          <h2 className="text-[13px] font-semibold">Notifications</h2>
+        </div>
+        <Separator />
+        <div className="p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Label>Study Reminders</Label>
-              <p className="text-xs text-muted-foreground">
-                Daily reminders to study
-              </p>
+              <Label className="text-sm font-medium">Study Reminders</Label>
+              <p className="text-xs text-muted-foreground leading-[1.6] mt-0.5">Daily reminders to keep your streak</p>
             </div>
-            <Switch
-              checked={notifPrefs?.study_reminders_enabled ?? false}
-              onCheckedChange={(checked) =>
-                notifMutation.mutate({ study_reminders_enabled: checked })
-              }
-            />
+            <Switch checked={notifPrefs?.study_reminders_enabled ?? false} onCheckedChange={(checked) => notifMutation.mutate({ study_reminders_enabled: checked })} />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <Label>Quiz Results</Label>
-              <p className="text-xs text-muted-foreground">
-                Notifications about quiz completions
-              </p>
+              <Label className="text-sm font-medium">Quiz Results</Label>
+              <p className="text-xs text-muted-foreground leading-[1.6] mt-0.5">Notifications about quiz completions</p>
             </div>
-            <Switch
-              checked={notifPrefs?.quiz_results_enabled ?? false}
-              onCheckedChange={(checked) =>
-                notifMutation.mutate({ quiz_results_enabled: checked })
-              }
-            />
+            <Switch checked={notifPrefs?.quiz_results_enabled ?? false} onCheckedChange={(checked) => notifMutation.mutate({ quiz_results_enabled: checked })} />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {user?.auth_provider !== "google" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Lock className="size-5 text-primary" />
-              Change Password
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={passwordForm.handleSubmit((d) =>
-                passwordMutation.mutate(d)
-              )}
-              className="space-y-4"
-            >
+        <section className="rounded-2xl border bg-card">
+          <div className="flex items-center gap-3 p-5 pb-4">
+            <Lock className="size-4 text-primary" />
+            <h2 className="text-[13px] font-semibold">Change Password</h2>
+          </div>
+          <Separator />
+          <div className="p-5">
+            <form onSubmit={passwordForm.handleSubmit((d) => passwordMutation.mutate(d))} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="current_password">Current password</Label>
+                <Label htmlFor="current_password" className="label-caps">Current password</Label>
                 <div className="relative">
-                  <Input
-                    id="current_password"
-                    type={showCurrentPw ? "text" : "password"}
-                    {...passwordForm.register("current_password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPw(!showCurrentPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    {showCurrentPw ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
+                  <Input id="current_password" type={showCurrentPw ? "text" : "password"} className="h-10 pr-10" {...passwordForm.register("current_password")} />
+                  <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors" tabIndex={-1}>
+                    {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="new_password">New password</Label>
+                <Label htmlFor="new_password" className="label-caps">New password</Label>
                 <div className="relative">
-                  <Input
-                    id="new_password"
-                    type={showNewPw ? "text" : "password"}
-                    {...passwordForm.register("new_password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPw(!showNewPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    {showNewPw ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
+                  <Input id="new_password" type={showNewPw ? "text" : "password"} className="h-10 pr-10" {...passwordForm.register("new_password")} />
+                  <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors" tabIndex={-1}>
+                    {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.new_password && (
-                  <p className="text-sm text-destructive">
-                    {passwordForm.formState.errors.new_password.message}
-                  </p>
-                )}
+                {passwordForm.formState.errors.new_password && <p className="text-xs text-destructive">{passwordForm.formState.errors.new_password.message}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="confirm_password">Confirm new password</Label>
-                <Input
-                  id="confirm_password"
-                  type="password"
-                  {...passwordForm.register("confirm_password")}
-                />
-                {passwordForm.formState.errors.confirm_password && (
-                  <p className="text-sm text-destructive">
-                    {passwordForm.formState.errors.confirm_password.message}
-                  </p>
-                )}
+                <Label htmlFor="confirm_password" className="label-caps">Confirm new password</Label>
+                <Input id="confirm_password" type="password" className="h-10" {...passwordForm.register("confirm_password")} />
+                {passwordForm.formState.errors.confirm_password && <p className="text-xs text-destructive">{passwordForm.formState.errors.confirm_password.message}</p>}
               </div>
-
-              <Button
-                type="submit"
-                size="sm"
-                disabled={passwordMutation.isPending}
-              >
-                {passwordMutation.isPending ? (
-                  <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                ) : (
-                  <Lock className="size-4" />
-                )}
+              <Button type="submit" size="sm" disabled={passwordMutation.isPending} className="h-8 text-xs font-semibold">
+                {passwordMutation.isPending ? <div className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Lock className="size-3.5" />}
                 Change Password
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
     </div>
   );

@@ -8,7 +8,6 @@ import {
   Brain,
   Clock,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Project, Document, Conversation, Quiz, Topic } from "@/lib/types";
 
@@ -30,87 +29,85 @@ export function ProjectOverview({
       label: "Documents",
       value: documents?.length ?? 0,
       icon: FileText,
-      color: "bg-primary/10 text-primary",
+      iconColor: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       label: "Conversations",
       value: conversations?.length ?? 0,
       icon: MessageSquare,
-      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-500/10",
     },
     {
       label: "Quizzes",
       value: quizzes?.length ?? 0,
       icon: BookOpen,
-      color: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      iconColor: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-500/10",
     },
     {
       label: "Topics",
       value: topics?.length ?? 0,
       icon: Brain,
-      color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+      iconColor: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-500/10",
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="flex items-center gap-4 p-4">
-              <div
-                className={`flex size-10 items-center justify-center rounded-xl ${stat.color}`}
-              >
-                <stat.icon className="size-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            key={stat.label}
+            className="group flex items-center gap-4 rounded-2xl border bg-card p-4 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
+          >
+            <div className={`flex size-10 items-center justify-center rounded-xl ${stat.bg} transition-transform duration-200 group-hover:scale-105`}>
+              <stat.icon className={`size-5 ${stat.iconColor}`} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+              <p className="label-caps">{stat.label}</p>
+            </div>
+          </div>
         ))}
       </div>
 
       {topics && topics.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Topics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {topics.map((topic) => (
-                <div key={topic.id} className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Brain className="size-4 text-primary" />
-                    <span className="font-medium">{topic.name}</span>
-                    {topic.subtopics?.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {topic.subtopics.length} subtopics
-                      </Badge>
-                    )}
-                  </div>
-                  {topic.description && (
-                    <p className="text-sm text-muted-foreground ml-6">
-                      {topic.description}
-                    </p>
+        <div className="rounded-2xl border bg-card overflow-hidden">
+          <div className="flex items-center gap-2 p-5 pb-4">
+            <Brain className="size-4 text-primary" />
+            <h2 className="text-[13px] font-semibold">Topics</h2>
+          </div>
+          <div className="px-5 pb-5 space-y-3">
+            {topics.map((topic) => (
+              <div key={topic.id} className="rounded-xl border border-border/50 p-3 transition-colors hover:bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Brain className="size-3.5 text-primary shrink-0" />
+                  <span className="font-medium text-sm">{topic.name}</span>
+                  {topic.subtopics?.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                      {topic.subtopics.length} subtopics
+                    </Badge>
                   )}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                {topic.description && (
+                  <p className="text-xs text-muted-foreground mt-1.5 ml-5.5 leading-relaxed">
+                    {topic.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
-      <Card>
-        <CardContent className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-          <Clock className="size-4" />
-          Last updated{" "}
-          {formatDistanceToNow(new Date(project.updated_at), {
-            addSuffix: true,
-          })}
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 text-[11px] text-muted-foreground px-1">
+        <Clock className="size-3" />
+        Last updated{" "}
+        {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
+      </div>
     </div>
   );
 }

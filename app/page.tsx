@@ -18,12 +18,18 @@ export default function Home() {
   }, [status, router]);
 
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-          <Brain className="size-8" />
+    <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-5">
+        <div className="relative">
+          <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Brain className="size-7 text-primary" />
+          </div>
+          <div className="absolute -inset-3 rounded-3xl border-2 border-primary/20 animate-ping" />
         </div>
-        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-sm font-medium tracking-tight">H2M AI</p>
+          <p className="text-xs text-muted-foreground">Loading...</p>
+        </div>
       </div>
     </div>
   );
