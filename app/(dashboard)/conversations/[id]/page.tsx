@@ -1,0 +1,225 @@
+"use client";
+
+import { use, useState, useRef, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Sparkles, Brain } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChatMessage } from "@/components/conversations/chat-message";
+import { ChatInput } from "@/components/conversations/chat-input";
+import { conversationsApi } from "@/lib/api/conversations";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import type { Message } from "@/lib/types";
+
+export default function ConversationDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+  const [streamingContent, setStreamingContent] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const { data: conversation, isLoading } = useQuery({
+    queryKey: ["conversations", id],
+    queryFn: () => conversationsApi.get(id),
+  });
+
+  const userInitials =
+    user?.full_name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
+
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversation?.messages, streamingContent, scrollToBottom]);
+
+  const handleSendMessage = useCallback(
+    (content: string) => {
+      setIsStreaming(true);
+      setStreamingContent("");
+
+      const userMessage: Message = {
+        id: `temp-${Date.now()}`,
+        conversation_id: id,
+        role: "user",
+        content,
+        sources: null,
+        tokens_used: null,
+        attachments: null,
+        created_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(
+        ["conversations", id],
+        (old: typeof conversation) => {
+          if (!old) return old;
+          return { ...old, messages: [...old.messages, userMessage] };
+        }
+      );
+
+      const controller = conversationsApi.streamMessage(
+        id,
+        content,
+        () => {},
+        (chunk: string) => {
+          setStreamingContent((prev) => prev + chunk);
+        },
+        () => {
+          setIsStreaming(false);
+          setStreamingContent("");
+          queryClient.invalidateQueries({ queryKey: ["conversations", id] });
+        },
+        (error: string) => {
+          setIsStreaming(false);
+          setStreamingContent("");
+          console.error("Stream error:", error);
+          queryClient.invalidateQueries({ queryKey: ["conversations", id] });
+        }
+      );
+
+      abortRef.current = controller;
+    },
+    [id, queryClient, conversation]
+  );
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-7rem)]">
+        <div className="flex items-center gap-3 p-4 border-b">
+          <Skeleton className="size-8" />
+          <Skeleton className="h-6 w-48" />
+        </div>
+        <div className="flex-1 p-4 space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className={`flex gap-3 ${i % 2 ? "" : "flex-row-reverse"}`}>
+              <Skeleton className="size-8 rounded-full shrink-0" />
+              <Skeleton className="h-16 w-64 rounded-2xl" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!conversation) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <h2 className="text-xl font-semibold">Conversation not found</h2>
+        <Button variant="link" onClick={() => router.push("/conversations")}>
+          Back to conversations
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-7rem)] -m-6">
+      <div className="flex items-center gap-3 px-4 py-3 border-b bg-background/80 backdrop-blur-sm">
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold truncate">{conversation.title}</h2>
+            {conversation.is_socratic && (
+              <Badge variant="secondary" className="gap-1 text-xs shrink-0">
+                <Sparkles className="size-3" />
+                Socratic
+              </Badge>
+            )}
+          </div>
+          {conversation.project && (
+            <p className="text-xs text-muted-foreground truncate">
+              {conversation.project.name}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto p-4 space-y-4">
+          {conversation.messages.length === 0 && !isStreaming && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
+                <Brain className="size-8" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">
+                Start the conversation
+              </h3>
+              <p className="text-muted-foreground max-w-sm">
+                {conversation.project
+                  ? "Ask me anything about your uploaded documents"
+                  : "Ask me anything about informatics"}
+              </p>
+            </div>
+          )}
+
+          {conversation.messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              userInitials={userInitials}
+            />
+          ))}
+
+          {isStreaming && streamingContent && (
+            <ChatMessage
+              message={{
+                id: "streaming",
+                conversation_id: id,
+                role: "assistant",
+                content: streamingContent,
+                sources: null,
+                tokens_used: null,
+                attachments: null,
+                created_at: new Date().toISOString(),
+              }}
+              userInitials={userInitials}
+            />
+          )}
+
+          {isStreaming && !streamingContent && (
+            <div className="flex gap-3">
+              <div className="size-8 rounded-full bg-muted flex items-center justify-center">
+                <Brain className="size-4 text-muted-foreground" />
+              </div>
+              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                <div className="flex gap-1">
+                  <div className="size-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
+                  <div className="size-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
+                  <div className="size-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ChatInput onSend={handleSendMessage} isLoading={isStreaming} />
+    </div>
+  );
+}
