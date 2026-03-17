@@ -10,6 +10,7 @@ interface AuthState {
   setUser: (user: User) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
@@ -30,6 +31,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   register: async (email, password, fullName) => {
     const response = await authApi.register(email, password, fullName);
+    localStorage.setItem("access_token", response.access_token);
+    localStorage.setItem("refresh_token", response.refresh_token);
+    set({ user: response.user, status: "authenticated" });
+  },
+
+  googleLogin: async (idToken) => {
+    const response = await authApi.googleAuth(idToken);
     localStorage.setItem("access_token", response.access_token);
     localStorage.setItem("refresh_token", response.refresh_token);
     set({ user: response.user, status: "authenticated" });

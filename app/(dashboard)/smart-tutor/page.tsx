@@ -8,6 +8,8 @@ import {
   Target,
   Lightbulb,
   Loader2,
+  Network,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -137,6 +139,12 @@ export default function SmartTutorPage() {
   const { data: examReadiness, isLoading: readinessLoading } = useQuery({
     queryKey: ["smart", "readiness", firstProjectId],
     queryFn: () => smartTutorApi.getExamReadiness(firstProjectId!),
+    enabled: !!firstProjectId,
+  });
+
+  const { data: crossConnections, isLoading: connectionsLoading } = useQuery({
+    queryKey: ["smart", "connections", firstProjectId],
+    queryFn: () => smartTutorApi.getCrossConnections(firstProjectId!),
     enabled: !!firstProjectId,
   });
 
@@ -325,6 +333,50 @@ export default function SmartTutorPage() {
                         </ul>
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="rounded-2xl border bg-card overflow-hidden lg:col-span-2">
+              <div className="flex items-center gap-2 p-5 pb-4">
+                <Network className="size-4 text-indigo-500" />
+                <h2 className="text-[13px] font-semibold">Cross-Topic Connections</h2>
+              </div>
+              <div className="px-5 pb-5">
+                {connectionsLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="size-5 animate-spin text-primary" />
+                  </div>
+                ) : !crossConnections?.length ? (
+                  <div className="flex flex-col items-center py-8 text-center">
+                    <div className="size-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                      <Network className="size-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-[1.6]">
+                      Upload more documents and take quizzes to discover connections between topics
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {crossConnections.map((conn, i) => (
+                      <div
+                        key={i}
+                        className="group rounded-xl border border-border/50 p-3 transition-colors hover:bg-muted/30"
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <Badge variant="secondary" className="text-[10px] h-5 px-2">
+                            {conn.from}
+                          </Badge>
+                          <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                          <Badge variant="secondary" className="text-[10px] h-5 px-2">
+                            {conn.to}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-[1.6]">
+                          {conn.connection}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

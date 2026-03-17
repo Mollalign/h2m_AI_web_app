@@ -1,17 +1,28 @@
 "use client";
 
 import { use, useState, useRef, useEffect, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sparkles, Brain } from "lucide-react";
+import { ArrowLeft, Sparkles, Brain, Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChatMessage } from "@/components/conversations/chat-message";
 import { ChatInput } from "@/components/conversations/chat-input";
 import { conversationsApi } from "@/lib/api/conversations";
+import { sharingApi } from "@/lib/api/sharing";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type { Message } from "@/lib/types";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 export default function ConversationDetailPage({
   params,
@@ -26,6 +37,41 @@ export default function ConversationDetailPage({
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [showShare, setShowShare] = useState(false);
+  const [shareEmails, setShareEmails] = useState("");
+
+  const shareMutation = useMutation({
+    mutationFn: () =>
+      sharingApi.createShare({
+        conversation_id: id,
+        title: conversation?.title ?? "Shared Conversation",
+      }),
+    onSuccess: (share) => {
+      const url = `${window.location.origin}/shared/${share.share_token}`;
+      navigator.clipboard.writeText(url);
+      toast.success("Share link copied to clipboard");
+      setShowShare(false);
+    },
+    onError: () => toast.error("Failed to create share link"),
+  });
+
+  const privateShareMutation = useMutation({
+    mutationFn: (emails: string[]) => sharingApi.sharePrivate(id, emails),
+    onSuccess: () => {
+      toast.success("Conversation shared privately");
+      setShareEmails("");
+      setShowShare(false);
+    },
+    onError: () => toast.error("Failed to share privately"),
+  });
+
+  const socraticToggleMutation = useMutation({
+    mutationFn: (isSocratic: boolean) =>
+      conversationsApi.update(id, { is_socratic: isSocratic }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations", id] });
+    },
+  });
 
   const { data: conversation, isLoading } = useQuery({
     queryKey: ["conversations", id],
@@ -148,12 +194,23 @@ export default function ConversationDetailPage({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="text-[13px] font-semibold truncate">{conversation.title}</h2>
-            {conversation.is_socratic && (
-              <Badge variant="secondary" className="gap-0.5 text-[10px] h-5 px-1.5 shrink-0">
+            <button
+              onClick={() => socraticToggleMutation.mutate(!conversation.is_socratic)}
+              className="shrink-0"
+              title={conversation.is_socratic ? "Switch to Direct mode" : "Switch to Socratic mode"}
+            >
+              <Badge
+                variant="secondary"
+                className={`gap-0.5 text-[10px] h-5 px-1.5 cursor-pointer transition-colors ${
+                  conversation.is_socratic
+                    ? "bg-primary/10 text-primary hover:bg-primary/20"
+                    : "hover:bg-muted/80"
+                }`}
+              >
                 <Sparkles className="size-2.5" />
-                Socratic
+                {conversation.is_socratic ? "Socratic" : "Direct"}
               </Badge>
-            )}
+            </button>
           </div>
           {conversation.project && (
             <p className="text-[11px] text-muted-foreground truncate">
@@ -161,6 +218,15 @@ export default function ConversationDetailPage({
             </p>
           )}
         </div>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setShowShare(true)}
+          className="text-muted-foreground shrink-0"
+          title="Share conversation"
+        >
+          <Share2 className="size-4" />
+        </Button>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
@@ -222,6 +288,71 @@ export default function ConversationDetailPage({
         onSend={(msg, img) => handleSendMessage(msg, img)}
         isLoading={isStreaming}
       />
+
+      <Dialog open={showShare} onOpenChange={setShowShare}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="size-5 text-primary" />
+              Share Conversation
+            </DialogTitle>
+            <DialogDescription>
+              Create a public link or share privately with specific users
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button
+              className="w-full h-10"
+              onClick={() => shareMutation.mutate()}
+              disabled={shareMutation.isPending}
+            >
+              {shareMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Share2 className="size-4" />
+              )}
+              Create Public Link
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-background px-3 text-muted-foreground">or share privately</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Email addresses (comma-separated)</Label>
+              <Input
+                placeholder="user@example.com, another@example.com"
+                value={shareEmails}
+                onChange={(e) => setShareEmails(e.target.value)}
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="w-full h-10"
+              onClick={() => {
+                const emails = shareEmails
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter(Boolean);
+                if (emails.length) privateShareMutation.mutate(emails);
+              }}
+              disabled={!shareEmails.trim() || privateShareMutation.isPending}
+            >
+              {privateShareMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Share2 className="size-4" />
+              )}
+              Share Privately
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,12 +14,43 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
 export default function RegisterPage() {
   const router = useRouter();
   const registerUser = useAuthStore((s) => s.register);
+  const googleLogin = useAuthStore((s) => s.googleLogin);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  const initGoogle = () => {
+    if (!window.google || !GOOGLE_CLIENT_ID || !googleBtnRef.current) return;
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: async (response: { credential: string }) => {
+        try {
+          await googleLogin(response.credential);
+          toast.success("Welcome!");
+          router.push("/dashboard");
+        } catch {
+          toast.error("Google sign-in failed");
+        }
+      },
+    });
+    window.google.accounts.id.renderButton(googleBtnRef.current, {
+      theme: "outline",
+      size: "large",
+      width: "400",
+      text: "signup_with",
+      shape: "pill",
+    });
+  };
+
+  useEffect(() => {
+    initGoogle();
+  }, []);
 
   const {
     register,
@@ -111,6 +143,29 @@ export default function RegisterPage() {
           )}
         </Button>
       </form>
+
+      {GOOGLE_CLIENT_ID && (
+        <>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-background px-3 text-muted-foreground">or continue with</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <div ref={googleBtnRef} />
+          </div>
+
+          <Script
+            src="https://accounts.google.com/gsi/client"
+            strategy="afterInteractive"
+            onLoad={initGoogle}
+          />
+        </>
+      )}
 
       <p className="text-center text-[13px] text-muted-foreground">
         Already have an account?{" "}

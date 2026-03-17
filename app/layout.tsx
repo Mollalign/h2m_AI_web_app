@@ -8,19 +8,19 @@ import { AuthProvider } from "@/providers/auth-provider";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-sans",
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const firaCode = Fira_Code({
-  variable: "--font-mono",
+  variable: "--font-fira-code",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "H2M AI - Informatics Tutor",
+  title: "H2M AI - Smart Learning Platform",
   description:
     "AI-powered educational platform for learning from your documents with intelligent tutoring, quizzes, and progress tracking.",
 };
@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${plusJakarta.variable} ${firaCode.variable} antialiased`}
+        className={`${plusJakarta.variable} ${firaCode.variable} font-sans antialiased`}
       >
         <ThemeProvider>
           <QueryProvider>

@@ -164,7 +164,7 @@ export default function ProjectDetailPage({
         </TabsContent>
 
         <TabsContent value="knowledge">
-          <ProjectKnowledge knowledge={knowledge} topics={topics} />
+          <ProjectKnowledge projectId={id} knowledge={knowledge} topics={topics} />
         </TabsContent>
       </Tabs>
     </div>

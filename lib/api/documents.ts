@@ -50,6 +50,28 @@ export const documentsApi = {
     return data;
   },
 
+  download: async (projectId: string, documentId: string): Promise<void> => {
+    const response = await apiClient.get(
+      `/projects/${projectId}/documents/${documentId}/download`,
+      { responseType: "blob" }
+    );
+    const blob = new Blob([response.data]);
+    const contentDisposition = response.headers["content-disposition"];
+    let filename = "document";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?(.+?)"?$/);
+      if (match) filename = match[1];
+    }
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+
   getStats: async (
     projectId: string
   ): Promise<{

@@ -15,6 +15,7 @@ import {
   Moon,
   Sun,
   ChevronsUpDown,
+  Share2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -29,6 +30,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -52,6 +54,7 @@ const insightsNav = [
 ];
 
 const systemNav = [
+  { title: "Shared", href: "/shares", icon: Share2 },
   { title: "Notifications", href: "/notifications", icon: Bell },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
@@ -60,6 +63,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { setOpenMobile, isMobile } = useSidebar();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
@@ -70,7 +74,12 @@ export function AppSidebar() {
     .toUpperCase()
     .slice(0, 2) || "U";
 
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false);
+  };
+
   const handleLogout = () => {
+    closeMobileSidebar();
     logout();
     router.push("/login");
   };
@@ -80,7 +89,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild onClick={closeMobileSidebar}>
               <Link href="/dashboard">
                 <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/20">
                   <Brain className="size-4" />
@@ -88,7 +97,7 @@ export function AppSidebar() {
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-bold tracking-[-0.02em]">H2M AI</span>
                   <span className="text-[10.5px] text-muted-foreground">
-                    Informatics Tutor
+                    Smart Learning
                   </span>
                 </div>
               </Link>
@@ -141,7 +150,7 @@ export function AppSidebar() {
                 align="start"
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
               >
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild onClick={closeMobileSidebar}>
                   <Link href="/settings">
                     <Settings className="size-4" />
                     Settings
@@ -176,6 +185,8 @@ function NavGroup({
   items: typeof mainNav;
   pathname: string;
 }) {
+  const { setOpenMobile, isMobile } = useSidebar();
+
   return (
     <SidebarGroup>
       {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
@@ -187,6 +198,9 @@ function NavGroup({
                 asChild
                 isActive={pathname.startsWith(item.href)}
                 tooltip={item.title}
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                }}
               >
                 <Link href={item.href}>
                   <item.icon />

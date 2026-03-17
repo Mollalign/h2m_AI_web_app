@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -12,6 +12,8 @@ import {
   Trophy,
   Clock,
   Loader2,
+  Play,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { quizzesApi } from "@/lib/api/quizzes";
+import { smartTutorApi } from "@/lib/api/smart-tutor";
 import type { Quiz, Topic, Difficulty } from "@/lib/types";
 
 const difficultyColors: Record<Difficulty, string> = {
@@ -54,6 +57,13 @@ export function ProjectQuizzes({
   const [showGenerate, setShowGenerate] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [questionCount, setQuestionCount] = useState("10");
+  const [useAdaptive, setUseAdaptive] = useState(false);
+
+  const { data: adaptiveDifficulty } = useQuery({
+    queryKey: ["adaptive-difficulty", projectId],
+    queryFn: () => smartTutorApi.getAdaptiveDifficulty(projectId),
+    enabled: showGenerate,
+  });
 
   const generateMutation = useMutation({
     mutationFn: () =>
@@ -153,6 +163,15 @@ export function ProjectQuizzes({
                     })}
                   </span>
                 </div>
+
+                <Button
+                  size="sm"
+                  className="w-full mt-3 h-8 text-xs font-semibold"
+                  onClick={() => router.push(`/quiz/${quiz.id}`)}
+                >
+                  <Play className="size-3" />
+                  Take Quiz
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -172,11 +191,40 @@ export function ProjectQuizzes({
           </DialogHeader>
 
           <div className="space-y-4">
+            {adaptiveDifficulty && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUseAdaptive(!useAdaptive);
+                  if (!useAdaptive) {
+                    setDifficulty(adaptiveDifficulty.difficulty as Difficulty);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 rounded-xl border p-3 transition-all duration-200 ${
+                  useAdaptive
+                    ? "border-primary bg-primary/5"
+                    : "hover:border-border/80 hover:bg-muted/30"
+                }`}
+              >
+                <Zap className={`size-4 ${useAdaptive ? "text-primary" : "text-muted-foreground"}`} />
+                <div className="text-left flex-1">
+                  <p className="text-xs font-semibold">Adaptive Difficulty</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Recommended: {adaptiveDifficulty.difficulty} &mdash; {adaptiveDifficulty.reason}
+                  </p>
+                </div>
+              </button>
+            )}
+
             <div className="space-y-2">
               <Label>Difficulty</Label>
               <Select
                 value={difficulty}
-                onValueChange={(v) => setDifficulty(v as Difficulty)}
+                onValueChange={(v) => {
+                  setDifficulty(v as Difficulty);
+                  setUseAdaptive(false);
+                }}
+                disabled={useAdaptive}
               >
                 <SelectTrigger>
                   <SelectValue />

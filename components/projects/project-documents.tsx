@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Loader2,
   Clock,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -91,6 +92,11 @@ export function ProjectDocuments({
       queryClient.invalidateQueries({ queryKey: ["documents", projectId] });
       toast.success("Document queued for reprocessing");
     },
+  });
+
+  const downloadMutation = useMutation({
+    mutationFn: (docId: string) => documentsApi.download(projectId, docId),
+    onError: () => toast.error("Failed to download document"),
   });
 
   const handleFileUpload = useCallback(
@@ -189,6 +195,16 @@ export function ProjectDocuments({
                     {status.label}
                   </Badge>
                   <div className="flex items-center gap-1">
+                    {doc.status === "ready" && (
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => downloadMutation.mutate(doc.id)}
+                        title="Download"
+                      >
+                        <Download className="size-3.5" />
+                      </Button>
+                    )}
                     {doc.status === "failed" && (
                       <Button
                         variant="ghost"

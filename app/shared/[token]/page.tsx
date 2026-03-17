@@ -1,12 +1,14 @@
 "use client";
 
 import { use } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Brain, MessageSquare, Eye } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Brain, MessageSquare, Eye, GitFork, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { sharingApi } from "@/lib/api/sharing";
+import { toast } from "sonner";
 import type { Message } from "@/lib/types";
 
 function SharedMessage({ message }: { message: Message }) {
@@ -50,6 +52,15 @@ export default function SharedConversationPage({
   const { data: conversation, isLoading, error } = useQuery({
     queryKey: ["shared", token],
     queryFn: () => sharingApi.viewShared(token),
+  });
+
+  const forkMutation = useMutation({
+    mutationFn: () => sharingApi.forkShared(token),
+    onSuccess: (data) => {
+      toast.success("Conversation forked to your account!");
+      window.location.href = `/conversations/${data.conversation_id}`;
+    },
+    onError: () => toast.error("Failed to fork. Please sign in first."),
   });
 
   if (isLoading) {
@@ -103,6 +114,20 @@ export default function SharedConversationPage({
           <Badge variant="secondary" className="text-xs">
             {conversation.messages?.length ?? 0} messages
           </Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => forkMutation.mutate()}
+            disabled={forkMutation.isPending}
+            className="h-8 text-xs"
+          >
+            {forkMutation.isPending ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <GitFork className="size-3" />
+            )}
+            Fork
+          </Button>
         </div>
       </header>
 
