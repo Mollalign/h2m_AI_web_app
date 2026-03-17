@@ -67,33 +67,33 @@ export function ChatInput({
   const canSend = (message.trim() || imageBase64) && !isLoading && !disabled;
 
   return (
-    <div className="border-t bg-background/80 backdrop-blur-xl p-4">
-      <div className="max-w-3xl mx-auto space-y-2">
+    <div className="bg-background px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-2 sm:pb-4">
+      <div className="max-w-3xl mx-auto flex flex-col items-center">
         {imagePreview && (
-          <div className="relative inline-block">
-            <img src={imagePreview} alt="Attached" className="h-16 rounded-xl border object-cover" />
+          <div className="relative inline-block mb-3 self-start w-full">
+            <img src={imagePreview} alt="Attached" className="h-16 rounded-xl border object-cover shadow-sm" />
             <button
               type="button"
               onClick={removeImage}
-              className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:bg-foreground/90 transition-colors"
+              className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:bg-foreground/90 transition-colors"
             >
               <X className="size-3" />
             </button>
           </div>
         )}
 
-        <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 transition-colors focus-within:border-primary/30">
+        <div className="flex w-full items-end gap-2 rounded-[28px] border border-border/80 bg-muted/40 px-2 py-2 shadow-sm transition-all focus-within:bg-background focus-within:border-primary/40 focus-within:shadow-md focus-within:ring-4 focus-within:ring-primary/10">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={disabled || isLoading}
-                className="shrink-0 text-muted-foreground hover:text-foreground"
+                className="size-[38px] shrink-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 ml-0.5 mb-0.5"
               >
-                <ImagePlus className="size-4" />
+                <ImagePlus className="size-[1.15rem]" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top">Attach image</TooltipContent>
@@ -108,25 +108,27 @@ export function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder={imageBase64 ? "Describe what you want to know about this image..." : "Ask anything..."}
             disabled={disabled || isLoading}
-            className="min-h-[36px] max-h-[160px] resize-none border-0 bg-transparent p-1 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="min-h-[40px] max-h-[180px] resize-none border-0 bg-transparent px-2 py-[10px] text-[14.5px] leading-relaxed shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
             rows={1}
           />
 
           <Button
-            size="icon-sm"
+            size="icon"
             onClick={handleSend}
             disabled={!canSend}
-            className="shrink-0 rounded-xl"
+            className={`size-[38px] shrink-0 rounded-full transition-all mb-0.5 mr-0.5 ${
+              canSend ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 hover:scale-105" : "bg-muted-foreground/20 text-muted-foreground"
+            }`}
           >
             {isLoading ? (
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 className="size-[1.15rem] animate-spin" />
             ) : (
-              <Send className="size-4" />
+              <Send className="size-[1.15rem] ml-0.5" />
             )}
           </Button>
         </div>
 
-        <p className="text-[10px] text-center text-muted-foreground/60">
+        <p className="text-[10px] sm:text-[11px] text-muted-foreground/40 font-medium tracking-wide mt-2">
           AI can make mistakes. Verify important information.
         </p>
       </div>
