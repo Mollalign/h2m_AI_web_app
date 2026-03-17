@@ -33,7 +33,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -131,21 +130,45 @@ function ConversationsContent() {
           ))}
         </div>
       ) : !filtered?.length ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="size-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
             <MessageSquare className="size-7 text-muted-foreground" />
           </div>
           <h3 className="text-[15px] font-semibold mb-1">
             {search ? "No conversations found" : "No conversations yet"}
           </h3>
-          <p className="text-sm text-muted-foreground leading-[1.6] mb-4 max-w-xs">
-            {search ? "Try a different search term" : "Start a conversation with AI to learn"}
+          <p className="text-sm text-muted-foreground leading-[1.6] mb-6 max-w-xs">
+            {search ? "Try a different search term" : "Start a conversation with your AI tutor"}
           </p>
           {!search && (
-            <Button onClick={() => setShowCreate(true)} variant="outline" className="h-9 text-sm font-semibold">
-              <Plus className="size-4" />
-              New Chat
-            </Button>
+            <div className="grid grid-cols-2 gap-3 max-w-xs w-full">
+              <button
+                type="button"
+                onClick={() => { setIsSocratic(false); setShowCreate(true); }}
+                className="flex flex-col items-center gap-2.5 rounded-2xl border bg-card p-5 transition-all duration-200 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5"
+              >
+                <div className="flex size-11 items-center justify-center rounded-xl bg-blue-500/10">
+                  <MessageSquare className="size-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold">Direct Chat</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">AI answers directly</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIsSocratic(true); setShowCreate(true); }}
+                className="flex flex-col items-center gap-2.5 rounded-2xl border bg-card p-5 transition-all duration-200 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5"
+              >
+                <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10">
+                  <Sparkles className="size-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold">Socratic Chat</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">AI guides with questions</p>
+                </div>
+              </button>
+            </div>
           )}
         </div>
       ) : (
@@ -235,12 +258,12 @@ function ConversationsContent() {
 
             <div className="space-y-2">
               <Label className="label-caps">Project (optional)</Label>
-              <Select value={newProjectId} onValueChange={setNewProjectId}>
+              <Select value={newProjectId || "none"} onValueChange={(v) => setNewProjectId(v === "none" ? "" : v)}>
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="No project (quick chat)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No project</SelectItem>
+                  <SelectItem value="none">No project</SelectItem>
                   {projects?.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}
@@ -250,17 +273,44 @@ function ConversationsContent() {
               </Select>
             </div>
 
-            <div className="flex items-center justify-between rounded-2xl border p-4">
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-primary" />
-                  <Label className="text-sm font-medium">Socratic mode</Label>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5 ml-5">
-                  AI guides you with questions instead of direct answers
-                </p>
+            <div className="space-y-2">
+              <Label className="label-caps">Learning Mode</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSocratic(false)}
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all duration-200 ${
+                    !isSocratic
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "hover:border-border/80 hover:bg-muted/50"
+                  }`}
+                >
+                  <MessageSquare className={`size-5 ${!isSocratic ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="text-center">
+                    <p className="text-xs font-semibold">Direct</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      AI answers directly
+                    </p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSocratic(true)}
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all duration-200 ${
+                    isSocratic
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "hover:border-border/80 hover:bg-muted/50"
+                  }`}
+                >
+                  <Sparkles className={`size-5 ${isSocratic ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="text-center">
+                    <p className="text-xs font-semibold">Socratic</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      AI guides with questions
+                    </p>
+                  </div>
+                </button>
               </div>
-              <Switch checked={isSocratic} onCheckedChange={setIsSocratic} />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
